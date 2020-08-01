@@ -68,4 +68,4 @@ Track 1
 ```
 
 
-Конечные настройки оборудования представлены по ссылкам [ASW](config/ASW), [R3](config/R3), [ISP1](config/ISP1), [ISP2](config/ISP2), [R4](config/R4).
+Конечные настройки оборудования представлены по ссылкам [ASW](configs/ASW), [R3](configs/R3), [ISP1](configs/ISP1), [ISP2](configs/ISP2), [R4](configs/R4).
