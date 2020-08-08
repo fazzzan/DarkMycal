@@ -1,0 +1,117 @@
+# Развертывание отказоустойчивого выхода в интернет Multi-homed с выделением конкретного ISP на свою подсетку.
+
+###  Задание:
+1. Построить сеть и произвести базовые настройки оборудования
+2. Настроить OSPF на R2 - R5
+3. Сконфигурировать на R1 access-list IP2, IP3, которые отбирают (permit) трафик конкретных хостов (подсетей), для использования в PBR ISP
+4. Настроить PBR ISP из двух блоков, для переназначения трафика левой части через правый ISP3(R5), правой части - через левый ISP1(R2)
+3. Настроить дефолтный маршрут через ISP 2
+4. Сконфигурировать PAT overload на R1, чтобы для каждой ветки inside ip брался свой IF outside
+
+
+###  Решение:
+Графическая схема, с нанесенной информацией о интерфейсах.
+![](PBR2.jpg)
+
+### Ответы на вопросы Л/р:
+- Произведена настройка адресов сетевой инфраструктуры в соответствии с графической схемой
+- Включен OSPF на R2-R5
+- Сконфигурированы access-lists IP2, IP3
+```
+ip access-list extended IP2
+ permit ip host 192.168.1.2 any
+ip access-list extended IP3
+ permit ip host 192.168.1.3 any
+ ```
+- Сконфигурирован PBR ISP, который задает левой ветки выход через правого провайдера (IP2-ISP3), правой ветке через левого провайдера (IP3-ISP1)
+```
+route-map ISP permit 10
+ match ip address IP2
+ set ip next-hop 10.0.5.2
+!
+route-map ISP permit 20
+ match ip address IP3
+ set ip next-hop 10.0.1.2
+ ```
+
+- Настроен дефолтный маршрут через ISP 2
+```
+ip route 0.0.0.0 0.0.0.0 10.0.2.2
+```
+- Сконфигурировать PAT overload на R1, с привязкой к исходящему трафику
+```
+route-map ISP1 permit 10
+ match ip address IP3
+ match interface GigabitEthernet0/0
+ip nat inside source route-map ISP1 interface GigabitEthernet0/0 overload
+!
+route-map ISP3 permit 10
+ match ip address IP2
+ match interface GigabitEthernet0/2
+ip nat inside source route-map ISP3 interface GigabitEthernet0/2 overload
+```
+Конечные настройки route-map
+```
+R1#sho ip policy
+Interface      Route map
+Gi0/3          ISP
+R1#sho route-map
+route-map ISP, permit, sequence 10
+  Match clauses:
+    ip address (access-lists): IP2 
+  Set clauses:
+    ip next-hop 10.0.5.2
+Nexthop tracking current: 0.0.0.0
+10.0.5.2, fib_nh:0,oce:0,status:0
+  Policy routing matches: 152 packets, 15352 bytes
+
+route-map ISP, permit, sequence 20
+  Match clauses:
+    ip address (access-lists): IP3 
+  Set clauses:
+    ip next-hop 10.0.1.2
+Nexthop tracking current: 0.0.0.0
+10.0.1.2, fib_nh:0,oce:0,status:0
+  Policy routing matches: 32 packets, 3392 bytes
+
+route-map ISP2, permit, sequence 10
+  Match clauses:
+    interface GigabitEthernet0/1 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
+route-map ISP3, permit, sequence 10
+  Match clauses:
+    ip address (access-lists): IP2 
+    interface GigabitEthernet0/2 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
+route-map ISP1, permit, sequence 10
+  Match clauses:
+    ip address (access-lists): IP3 
+    interface GigabitEthernet0/0 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
+```
+
+-Работа PAT проверена пингом до 172.20.20.2. Видно, что трафик идет разными путями, в соответствии с ТЗ
+```
+PC1> trace 172.20.20.2
+trace to 172.20.20.2, 8 hops max, press Ctrl+C to stop
+ 1   192.168.1.1   6.742 ms  6.341 ms  4.099 ms
+ 2   10.0.5.2   9.738 ms  12.237 ms  9.858 ms
+ 3   10.0.6.2   11.205 ms  8.759 ms  7.976 ms
+ 4   *172.20.20.2   8.812 ms (ICMP type:3, code:3, Destination port unreachable)
+ 
+PC2> trace 172.20.20.2
+trace to 172.20.20.2, 8 hops max, press Ctrl+C to stop
+ 1   192.168.1.1   4.539 ms  5.131 ms  3.546 ms
+ 2   10.0.1.2   9.327 ms  6.668 ms  6.970 ms
+ 3   10.0.3.2   7.751 ms  8.647 ms  8.390 ms
+ 4   *172.20.20.2   11.365 ms (ICMP type:3, code:3, Destination port unreachable)
+
+```
+
+
+Конечные настройки оборудования представлены по ссылкам [R1](Configs/R1), [ISP1](Configs/R2), [ISP2](Configs/R4), [ISP3](Configs/R5), [R3](Configs/R3).
+
+Конечный интерес для задачи представляет разработка ip sla, который переопределяет PBR таким образом, чтобы при падении какого-либо провайдера, трафик переключался ISP1-ISP3-ISP2 или ISP3-ISP1-ISP2, то есть ISP2 был бы задействован в последнюю очередь
