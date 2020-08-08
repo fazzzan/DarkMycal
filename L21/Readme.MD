@@ -137,10 +137,12 @@ route-map ISP permit 10
  match ip address IP2
  set ip next-hop verify-availability 10.0.5.2 10 track 3
  set ip next-hop verify-availability 10.0.1.2 20 track 1
+ set ip next-hop 10.0.2.2 30
 route-map ISP permit 20
  match ip address IP3
  set ip next-hop verify-availability 10.0.1.2 10 track 1
  set ip next-hop verify-availability 10.0.5.2 20 track 3
+ set ip next-hop 10.0.2.2 30
 ```
 Для каждого RM определяющего работу PAT добавляем вторичный RM 20, с проверкой прохожддения трафика через второй IF
 ```
@@ -157,5 +159,9 @@ route-map ISP3 permit 10
 route-map ISP3 permit 20
  match ip address IP3
  match interface GigabitEthernet0/2
+```
+Проверка командой, которая покажет какой маршрут подставляется в настоящее время, на основании состояния трекинга.
+```
+show route-map
 ```
 Схему надо дополнить сбросом текущих сессий трансляции.
