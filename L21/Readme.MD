@@ -115,3 +115,47 @@ trace to 172.20.20.2, 8 hops max, press Ctrl+C to stop
 Конечные настройки оборудования представлены по ссылкам [R1](Configs/R1), [ISP1](Configs/R2), [ISP2](Configs/R4), [ISP3](Configs/R5), [R3](Configs/R3).
 
 Конечный интерес для задачи представляет разработка ip sla, который переопределяет PBR таким образом, чтобы при падении какого-либо провайдера, трафик переключался ISP1-ISP3-ISP2 или ISP3-ISP1-ISP2, то есть ISP2 был бы задействован в последнюю очередь
+Частичное решение задачи представлено ниже:
+Добавляем 2 зонда ip SLA1,3. Они проверяют некий сторонний ресурс через ISP1, ISP3 соответственно:
+```
+ip sla 1
+ icmp-echo 10.0.3.2 source-interface GigabitEthernet0/0
+ frequency 10
+ip sla schedule 1 life forever start-time now
+ip sla 3
+ icmp-echo 10.0.6.2 source-interface GigabitEthernet0/2
+ frequency 10
+ip sla schedule 3 life forever start-time now
+
+track 1 ip sla 1
+!
+track 3 ip sla 3
+```
+Корректируем Route-map ISP путем добавления вторичного next-hop. Этим мы добиваемся чтобы RM подставлял строчку "выжившего" ISP и направлял интересующий трафик через соответствующего ISP.
+```
+route-map ISP permit 10
+ match ip address IP2
+ set ip next-hop verify-availability 10.0.5.2 10 track 3
+ set ip next-hop verify-availability 10.0.1.2 20 track 1
+route-map ISP permit 20
+ match ip address IP3
+ set ip next-hop verify-availability 10.0.1.2 10 track 1
+ set ip next-hop verify-availability 10.0.5.2 20 track 3
+```
+Для каждого RM определяющего работу PAT добавляем вторичный RM 20, с проверкой прохожддения трафика через второй IF
+```
+route-map ISP1 permit 10
+ match ip address IP3
+ match interface GigabitEthernet0/0
+route-map ISP1 permit 20
+ match ip address IP2
+ match interface GigabitEthernet0/0
+
+route-map ISP3 permit 10
+ match ip address IP2
+ match interface GigabitEthernet0/2
+route-map ISP3 permit 20
+ match ip address IP3
+ match interface GigabitEthernet0/2
+```
+Схему надо дополнить сбросом текущих сессий трансляции.
