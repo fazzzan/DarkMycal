@@ -117,6 +117,22 @@ trace to 172.20.20.2, 8 hops max, press Ctrl+C to stop
 Конечный интерес для задачи представляет разработка ip sla, который переопределяет PBR таким образом, чтобы при падении какого-либо провайдера, трафик переключался ISP1-ISP3-ISP2 или ISP3-ISP1-ISP2, то есть ISP2 был бы задействован в последнюю очередь
 Частичное решение задачи представлено ниже:
 Добавляем 2 зонда ip SLA1,3. Они проверяют некий сторонний ресурс через ISP1, ISP3 соответственно:
+Возможны 2 варианта зондов:
+I
+```
+R1#show run | sec ip sla
+track 1 ip sla 1
+track 3 ip sla 3
+ip sla 1
+ icmp-jitter 10.0.3.2 source-ip 10.0.1.1
+ frequency 5
+ip sla schedule 1 life forever start-time now
+ip sla 3
+ icmp-jitter 10.0.6.2 source-ip 10.0.5.1
+ frequency 5
+ip sla schedule 3 life forever start-time now
+```
+II - менее предпочтительный, который срабатывает на любое падение канала
 ```
 ip sla 1
  icmp-echo 10.0.3.2 source-interface GigabitEthernet0/0
