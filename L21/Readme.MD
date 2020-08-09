@@ -137,14 +137,14 @@ route-map ISP permit 10
  match ip address IP2
  set ip next-hop verify-availability 10.0.5.2 10 track 3
  set ip next-hop verify-availability 10.0.1.2 20 track 1
- set ip next-hop 10.0.2.2 30
+ set ip next-hop 10.0.2.2
 route-map ISP permit 20
  match ip address IP3
  set ip next-hop verify-availability 10.0.1.2 10 track 1
  set ip next-hop verify-availability 10.0.5.2 20 track 3
- set ip next-hop 10.0.2.2 30
+ set ip next-hop 10.0.2.2
 ```
-Для каждого RM определяющего работу PAT добавляем вторичный RM 20, с проверкой прохожддения трафика через второй IF
+Для каждого RM, определяющего работу PAT, добавляем вторичный RM 20, с проверкой прохождения трафика через второй IF. 
 ```
 route-map ISP1 permit 10
  match ip address IP3
@@ -160,8 +160,81 @@ route-map ISP3 permit 20
  match ip address IP3
  match interface GigabitEthernet0/2
 ```
-Проверка командой, которая покажет какой маршрут подставляется в настоящее время, на основании состояния трекинга.
+В случае падения ISP1, ISP3 - в дело будет вступать ISP2: здесь уже не будет никаких проверок на IP, его задача - выпустить любой трафик через ISP2 
+```
+route-map ISP2 permit 10
+ match interface GigabitEthernet0/1
+
+ip nat inside source route-map ISP2 interface GigabitEthernet0/1 overload
+```
+Проверка командой "show route-map", которая покажет какой маршрут подставляется в настоящее время, на основании состояния трекинга. Представлен вывод, в случае падения ISP1, ISP3.
 ```
 show route-map
+route-map ISP, permit, sequence 10
+  Match clauses:
+    ip address (access-lists): IP2 
+  Set clauses:
+    ip next-hop verify-availability 10.0.5.2 10 track 3  [down]
+    ip next-hop verify-availability 10.0.1.2 20 track 1  [down]
+    ip next-hop 10.0.2.2
+  Policy routing matches: 39 packets, 4014 bytes
+route-map ISP, permit, sequence 20
+  Match clauses:
+    ip address (access-lists): IP3 
+  Set clauses:
+    ip next-hop verify-availability 10.0.1.2 10 track 1  [down]
+    ip next-hop verify-availability 10.0.5.2 20 track 3  [down]
+    ip next-hop 10.0.2.2
+  Policy routing matches: 48 packets, 4896 bytes
+route-map ISP2, permit, sequence 10
+  Match clauses:
+    interface GigabitEthernet0/1 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
+route-map ISP3, permit, sequence 10
+  Match clauses:
+    ip address (access-lists): IP2 
+    interface GigabitEthernet0/2 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
+route-map ISP3, permit, sequence 20
+  Match clauses:
+    ip address (access-lists): IP3 
+    interface GigabitEthernet0/2 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
+route-map ISP1, permit, sequence 10
+  Match clauses:
+    ip address (access-lists): IP3 
+    interface GigabitEthernet0/0 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
+route-map ISP1, permit, sequence 20
+  Match clauses:
+    ip address (access-lists): IP2 
+    interface GigabitEthernet0/0 
+  Set clauses:
+  Policy routing matches: 0 packets, 0 bytes
 ```
-Схему надо дополнить сбросом текущих сессий трансляции.
+Вывод маршрута при падении ISP1, ISP3:
+```
+PC1> trace 172.20.20.2
+trace to 172.20.20.2, 8 hops max, press Ctrl+C to stop
+ 1   192.168.1.1   3.312 ms  2.135 ms  2.517 ms
+ 2   10.0.2.2   6.955 ms  3.327 ms  3.300 ms
+ 3   10.0.4.1   6.412 ms  4.892 ms  4.997 ms
+ 4     *  *  *
+ 5   172.20.20.2   8.662 ms  1.362 ms
+
+PC2> trace 172.20.20.2
+trace to 172.20.20.2, 8 hops max, press Ctrl+C to stop
+ 1   192.168.1.1   3.901 ms  1.848 ms  1.715 ms
+ 2   10.0.2.2   6.992 ms  3.288 ms  4.438 ms
+ 3   10.0.4.1   6.776 ms  5.065 ms  6.070 ms
+ 4   *172.20.20.2   8.006 ms (ICMP type:3, code:3, Destination port unreachable)
+```
+
+Были мысли дополнить конфигурацию сбросом текущих сессий трансляции, но посоветовавшись с Алексеем - решено не делать этого, так как NAT сам сбрасывает сессии через определнное время.
+Единственное что смущает - достаточно большое число пропавших пакетов при восстановлении ISP1, ISP3. Пока нашел объяснение только в одном:
+при отключении и последующем включении IF - происходит перестроение OSPF R2-R5
+![](OSPF_PBR2.jpg)
