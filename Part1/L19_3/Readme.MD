@@ -14,6 +14,7 @@
 ### Ответы на вопросы Л/р:
 - Произведена настройка адресов сетевой инфраструктуры в соответствии с графической схемой
 - Сконфигурирован ip SLA, track1 на R3 так, чтобы он пинговал lo0 R4 (8.8.8.8) через gi0/1
+- Конфиги устройств: [ASW](configs/ASW), [ISP1](configs/ISP1), [ISP2](configs/ISP2), [R3](configs/R3), [R4](configs/R4)
 ```
 ip sla 1
  icmp-echo 8.8.8.8 source-interface GigabitEthernet0/1
