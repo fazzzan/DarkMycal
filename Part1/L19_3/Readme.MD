@@ -69,6 +69,3 @@ Track 1
   Tracked by:
     Static IP Routing 0
 ```
-
-
-Конечные настройки оборудования представлены по ссылкам [ASW](Configs/ASW), [R3](Configs/R3), [ISP1](Configs/ISP1), [ISP2](Configs/ISP2), [R4](Configs/R4).
