@@ -18,7 +18,7 @@
 - выполнена настройка ip sla на DSW1,2; каждая ветка мониторит ISP-GW своей стороны, при отсутствии пинга - снижает priority того HSRP, который отвечает за primary VLAN соответствующей стороны
 - выполнена настройка spanning-tree  DSW1 - vlan10 (Root primary), DSW2 - vlan20 (Root primary)
 - Выполнена настройка ip sla на R1 (prior -20), R2 (prior -20). Priority отрабатывает при падении IF
-- Конфиги устройств: [ASW1](configs/ASW1), [ISP1](configs/ISP1), [DSW1](configs/DSW1), [DSW2](configs/DSW2), [EdgeR1](configs/EdgeR1), [EdgeR2](configs/EdgeR1)
+- Конфиги устройств: [ASW](configs/ASW), [ISP1](configs/ISP1), [DSW1](configs/DSW1), [DSW2](configs/DSW2), [EdgeR1](configs/EdgeR1), [EdgeR2](configs/EdgeR1)
 
 Работа HSRP проверена на VM1, VM2: при отключении (suspend) линка до ISP - второй роутер становится Active и продолжает NAT
 Работа инфраструктуры проверялась утилитой ping с VM1, VM2: все ip-адреса сетевой инфраструктуры доступны обоим ПК, после формирования ими ipv6-адресов.
