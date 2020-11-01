@@ -1,0 +1,35 @@
+hostname R2
+
+int e0/0
+ip add 10.0.2.1 255.255.255.0
+no shut
+end
+
+int e1/3
+ip add 10.0.1.2 255.255.255.0
+no shut
+end
+
+int e0/1
+no shut
+end
+
+int e0/1.2
+encapsulation dot1Q 102
+ip add 192.168.2.1 255.255.255.0
+no shut
+end
+
+int lo0
+ip add 10.10.0.2 255.255.255.255
+no shut
+end
+
+ip dhcp excluded-address 192.168.2.1 192.168.2.10
+
+ip dhcp pool LAN
+network 192.168.2.0 /24
+domain-name otus.local
+default-router 192.168.2.1
+
+clock timezone MSK +0

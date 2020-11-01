@@ -1,0 +1,21 @@
+vlan 101
+name DATA_101
+end
+
+int e0/0
+descr access_to_GW_e0/1
+swi mo trunk
+swi trun allowed vlan 101
+
+int e0/1
+descr access_DATA
+swi mo access
+swi access vlan 101
+
+int e0/2
+descr access_DATA
+swi mo access
+swi access vlan 101
+
+
+clock timezone MSK +0
