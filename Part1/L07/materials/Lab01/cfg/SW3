@@ -1,10 +1,11 @@
 vlan 103
 name DATA_103
-end
+exit
 
 
 int e0/0
 descr access_to_GW_e0/1
+swi trun en dot
 swi mo trunk
 swi trun allowed vlan 103
 

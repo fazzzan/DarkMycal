@@ -3,11 +3,11 @@ hostname R4
 int e1/3
 ip add 10.0.3.2 255.255.255.0
 no shut
-end
+exit
 
 int e0/1
 no shut
-end
+exit
 
 int e0/1.4
 encapsulation dot1Q 104
@@ -16,7 +16,7 @@ ip add 192.168.4.1 255.255.255.0
 int lo0
 ip add 10.10.0.4 255.255.255.255
 no shut
-end
+exit
 
 ip dhcp excluded-address 192.168.4.1 192.168.4.10
 

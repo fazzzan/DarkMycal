@@ -3,27 +3,27 @@ hostname R3
 int e0/0
 ip add 10.0.3.1 255.255.255.0
 no shut
-end
+exit
 
 int e1/3
 ip add 10.0.2.2 255.255.255.0
 no shut
-end
+exit
 
 int e0/1
 no shut
-end
+exit
 
 int e0/1.3
 encapsulation dot1Q 103
 ip add 192.168.3.1 255.255.255.0
 no shut
-end
+exit
 
 int lo0
 ip add 10.10.0.3 255.255.255.255
 no shut
-end
+exit
 
 ip dhcp excluded-address 192.168.3.1 192.168.3.10
 
