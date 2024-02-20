@@ -1,0 +1,56 @@
+hostname R5
+no ip domain lookup
+ip cef
+
+### Включаем Loggi syn
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+
+### Настраиваем адреса на IF
+interface Loopback0
+ ip address 50.0.1.1 255.255.255.0
+ no shut
+!
+interface GigabitEthernet0/0
+ ip address 10.0.1.1 255.255.255.252
+ no shut
+!
+interface GigabitEthernet0/1
+ ip address 172.10.10.2 255.255.255.0
+ no shut
+!
+interface GigabitEthernet0/3
+ ip address 215.20.20.1 255.255.255.0
+ no shut
+
+### Включаем OSPF
+router ospf 1
+ router-id 5.5.5.5
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
+
+interface Loopback0
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/1
+ ip ospf 1 area 0
+!
+### Включаем BGP
+router bgp 65010
+ bgp log-neighbor-changes
+ network 215.20.20.0
+ neighbor 50.0.2.1 remote-as 65010
+ neighbor 50.0.2.1 update-source Loopback0
+ neighbor 50.0.2.1 next-hop-self
+ neighbor 50.0.3.1 remote-as 65010
+ neighbor 50.0.3.1 update-source Loopback0
+ neighbor 50.0.3.1 next-hop-self
+ neighbor 50.0.4.1 remote-as 65010
+ neighbor 50.0.4.1 update-source Loopback0
+ neighbor 50.0.4.1 next-hop-self
+ neighbor 172.10.10.1 remote-as 65020

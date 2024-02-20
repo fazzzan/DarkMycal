@@ -1,0 +1,20 @@
+AS 65010. 
+ТЗ: жестко направить весть трафик через левого ISP:
+Настариваем route-map только на R - ближайшем к ISP:
+
+### route-map для GW ближайшего к нужному ISP
+route-map LEFT permit 10
+set weight 150
+
+### R5 - ближайший к нужному ISP
+router bgp 65010
+neighbor 172.10.10.1 route-map LEFT in
+
+##############################################################
+### route-map для GW через ненужных ISP
+route-map RIGHT-NO-TRAF permit 10
+ set as-path prepend 65010 65010 65010 65010
+
+### R8 - ненужный ISP
+router bgp 65010
+neighbor 134.15.15.1 route-map RIGHT-NO-TRAF out

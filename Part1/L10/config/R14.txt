@@ -1,0 +1,43 @@
+hostname R14
+no ip domain lookup
+!
+### Включаем Loggi syn
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ exit
+
+### Настраиваем адреса на IF
+interface Loopback0
+ ip address 50.0.2.1 255.255.255.255
+ no shut
+!
+interface GigabitEthernet0/0
+ ip address 10.0.1.2 255.255.255.252
+ no shut
+!
+interface GigabitEthernet0/3
+ ip address 66.40.31.1 255.255.255.0
+ no shut
+ exit
+!
+### Включаем OSPF
+router ospf 1
+ router-id 14.14.14.14
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
+ exit
+!
+interface Loopback0
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip ospf 1 area 0
+!
+### Включаем BGP
+router bgp 65030
+ network 66.40.31.0 mask 255.255.255.0
+ neighbor 50.0.1.1 remote-as 65030
+ neighbor 50.0.1.1 update-source Loopback0
+!

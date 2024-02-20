@@ -1,0 +1,39 @@
+AS 65010. 
+ТЗ: надо направить трафик до:
+- 55.30.30.2 - через левую ветку
+- 55.30.31.2 - через правую
+Настариваем route-map следующим образом:
+
+### Общая часть для всех RRR AS 65010
+ip prefix-list WEIGHT-L seq 5 permit 55.30.30.0/24
+ip prefix-list WEIGHT-R seq 5 permit 55.30.31.0/24
+
+route-map LEFT permit 10
+match ip address prefix-list WEIGHT-L
+set weight 150
+route-map LEFT permit 30
+set weight 0
+
+route-map RIGHT permit 10
+match ip address prefix-list WEIGHT-R
+set weight 150
+route-map RIGHT permit 30
+set weight 0
+
+### R5
+router bgp 65010
+neighbor 50.0.4.1 route-map RIGHT in
+
+### R6
+router bgp 65010
+neighbor 50.0.1.1 route-map LEFT in
+neighbor 50.0.4.1 route-map RIGHT in
+
+### R7
+router bgp 65010
+neighbor 50.0.1.1 route-map LEFT in
+neighbor 50.0.4.1 route-map RIGHT in
+
+### R8
+router bgp 65010
+neighbor 50.0.1.1 route-map LEFT in

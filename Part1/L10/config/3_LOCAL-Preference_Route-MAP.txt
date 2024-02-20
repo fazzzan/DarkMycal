@@ -1,0 +1,11 @@
+AS 65010. 
+ТЗ: надо направить весть трафик через левого ISP:
+Настариваем route-map только на R - ближайшем к ISP:
+
+### На нужном BORDER AS 65010
+route-map LEFT-BEST permit 10
+ set local-preference 150
+
+### R5
+router bgp 65010
+neighbor 172.10.10.1 route-map LEFT-BEST in

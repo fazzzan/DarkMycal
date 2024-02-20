@@ -26,7 +26,27 @@ Cisco Systems всё больше и больше продуктов выпус�
   - 3725
   - 3745
   - 7200 (от NPE-100 до NPE-G1)
-  
+
+# EVE-NG
+Виртуальная машина, отличающаяся от GNS3. Имеет свои особенности. Импорт и запуск в qemu образов виртуального оборудования выполняется в несколько этапов. Ниже приведены команды необходимые для импорта  
+```
+mkdir /opt/unetlab/addons/qemu/csr1000vng-universalk9.16.09.06.Fuji/
+/opt/qemu-2.2.0/bin/qemu-system-x86_64  -nographic -drive file=virtioa.qcow2,if=virtio,bus=0,unit=0,cache=none -machine type=pc-1.0,accel=kvm -serial mon:stdio -nographic -nodefconfig -nodefaults -rtc base=utc -cdrom csr1000v-universalk9.16.09.06.iso -boot order=dc  -m 4096
+
+/opt/qemu-2.2.0/bin/qemu-system-x86_64  -nographic -drive file=virtioa.qcow2,if=virtio,bus=0,unit=0,cache=none -machine type=pc-1.0,accel=kvm -serial mon:stdio -nographic -nodefconfig -nodefaults -rtc base=utc -boot order=dc  -m 4096
+```
+
+```
+mkdir /opt/unetlab/addons/qemu/csr1000vng-universalk9.16.12.04a.Gibraltar
+mv virtioa.qcow2 /opt/unetlab/addons/qemu/csr1000vng-universalk9.16.12.04a.Gibraltar
+/opt/qemu-2.2.0/bin/qemu-system-x86_64  -nographic -drive file=virtioa.qcow2,if=virtio,bus=0,unit=0,cache=none -machine type=pc-1.0,accel=kvm -serial mon:stdio -nographic -nodefconfig -nodefaults -rtc base=utc -cdrom csr1000v-universalk9.16.12.04a.iso -boot order=dc  -m 4096
+```
+
+```
+mkdir /opt/unetlab/addons/qemu/csr1000vng-universalk9.17.03.01a.Amsterdam
+mv virtioa.qcow2 /opt/unetlab/addons/qemu/csr1000vng-universalk9.17.03.01a.Amsterdam
+/opt/qemu-2.2.0/bin/qemu-system-x86_64  -nographic -drive file=virtioa.qcow2,if=virtio,bus=0,unit=0,cache=none -machine type=pc-1.0,accel=kvm -serial mon:stdio -nographic -nodefconfig -nodefaults -rtc base=utc -cdrom csr1000vng-universalk9.17.03.01a.iso -boot order=dc  -m 4096
+```
 # GNS3
 GNS3 позволяет запускать не только образы Dynamips, но и VA/QEMU, а также взаимодействовать с IOU и другими виртуальными машинами. Приложение является «толстым», т.е. запускается непосредственно на машине, на которой находится. Для эмуляции устройств оно может использовать виртуальные машины, расположенные на этом же хосте или удалённо. Поддерживается работа в Linux, Windows и Mac OS X. Большим плюсом GNS3 является возможность использования тех же инструментов, что и для работы с реальным «железом»: PuTTY, SecureCRT, Wireshark и др.
 

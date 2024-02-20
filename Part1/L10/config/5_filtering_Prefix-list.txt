@@ -1,0 +1,9 @@
+AS 65010. 
+ТЗ: Разрешаем анонс только одной собственной сети на R, глядящем на ISP
+
+### ip as-path с регуляркой
+ip prefix-list ALLOW_ACCESS seq 5 permit 215.20.22.0/24
+
+### вешаем prefix-list на исходящие анонсы в сторону нужного соседа-ISP
+router bgp 65010
+neighbor 172.10.10.1 prefix-list 1 out

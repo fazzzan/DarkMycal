@@ -1,0 +1,40 @@
+hostname R9
+no ip domain lookup
+
+### Включаем Loggi syn
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+
+### Настраиваем адреса на IF
+interface Loopback0
+ ip address 50.0.1.1 255.255.255.255
+ no shut
+!
+interface GigabitEthernet0/0
+ ip address 10.0.1.1 255.255.255.252
+ no shut
+!
+interface GigabitEthernet0/3
+ ip address 137.30.30.1 255.255.255.0
+ no shut
+!
+### Включаем OSPF
+router ospf 1
+ router-id 9.9.9.9
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
+!
+interface Loopback0
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip ospf 1 area 0
+!
+### Включаем BGP
+router bgp 65020
+ bgp log-neighbor-changes
+ network 137.30.30.0 mask 255.255.255.0
+ neighbor 50.0.2.1 remote-as 65020
+ neighbor 50.0.2.1 update-source Loopback0

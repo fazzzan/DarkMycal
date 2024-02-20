@@ -1,0 +1,34 @@
+AS 65010. 
+ТЗ: Разрешаем вход только анонсу 0.0.0.0 R5 - ISP1
+
+### Разрешим префиксы от AS 65020
+ip as-path access-list 1 permit ^65020$
+
+### Создаем prefix-list (ACL)
+ip prefix-list DEFAULT-ONLY seq 10 permit 0.0.0.0/0
+ip prefix-list DEFAULT-ONLY seq 20 deny 0.0.0.0/0 le 32
+
+### Создадим route-map на 2 условия, в результате выполнения local-preference станет 150. А если просот прилетит нулевка, то local-preference не трогать - это делается для BORDER R8-ISP2
+
+route-map FILTER-DEFAULT permit 10
+ match ip address prefix-list DEFAULT-ONLY
+ match as-path 1
+ set local-preference 150
+
+ route-map FILTER-DEFAULT permit 20
+ match ip address prefix-list DEFAULT-ONLY
+
+### Вешаем на соседа R5-ISP1
+router bgp 65010
+neighbor 172.10.10.1 route-map FILTER-DEFAULT
+
+### Вешаем на соседа R8-ISP2
+router bgp 65010
+neighbor 172.10.10.1 route-map FILTER-DEFAULT
+
+### На ISP1, ISP2 должен быть анонсирован префикс 0.0.0.0
+router bgp XXXX
+network 0.0.0.0 mask 0.0.0.0
+
+и объявлен статический маршрут
+ip route 0.0.0.0 0.0.0.0 null0
